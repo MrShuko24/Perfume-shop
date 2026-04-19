@@ -1,7 +1,7 @@
 "use client"; // Dòng này cực kỳ quan trọng trong Next.js để báo cho nó biết đây là giao diện tương tác (có useState, useEffect)
 
 import React, { useState, useEffect, useRef, FormEvent } from 'react';
-import { ShoppingBag, Sparkles, MessageCircle, X, Send, User, Bot, Menu, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Sparkles, MessageCircle, X, Send, Bot, Menu, ChevronRight } from 'lucide-react';
 
 // --- MOCK DATA ---
 const PRODUCTS = [
@@ -45,13 +45,30 @@ const fetchWithRetry = async (url: string, options: RequestInit, retries = 5, in
     for (let i = 0; i < retries; i++) {
         try {
             const res = await fetch(url, options);
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            return await res.json();
+
+            // Nếu HTTP thành công
+            if (res.ok) {
+                return await res.json();
+            }
+
+            // Nếu HTTP lỗi (404, 500) mà hết lần thử: Trả về một Promise thất bại thẳng ra ngoài
+            if (i === retries - 1) {
+                return Promise.reject(new Error(`HTTP error! status: ${res.status}`));
+            }
+
+            console.warn(`Attempt ${i + 1} failed with status: ${res.status}. Retrying...`);
+
         } catch (e) {
-            if (i === retries - 1) throw e;
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 2;
+            // Lỗi sập mạng sẽ nhảy vào đây
+            if (i === retries - 1) {
+                throw e; // Ném thẳng ra ngoài (hợp lệ vì nó đang ở trong catch)
+            }
+            console.warn(`Attempt ${i + 1} encountered a network error. Retrying...`);
         }
+
+        // Đợi rồi thử lại
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2;
     }
 };
 
