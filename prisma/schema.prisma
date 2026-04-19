@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// ------------------------------------------------------
+// BẢNG 1: NGƯỜI DÙNG (Khách hàng & Admin)
+// ------------------------------------------------------
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String?
+  email     String   @unique
+  password  String   // Lưu mật khẩu đã băm (hash)
+  image     String?  // Ảnh đại diện
+  role      Role     @default(USER)
+
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ------------------------------------------------------
+// BẢNG 2: DANH MỤC (Nam, Nữ, Unisex, Mùa hè...)
+// ------------------------------------------------------
+model Category {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ------------------------------------------------------
+// BẢNG 3: SẢN PHẨM NƯỚC HOA
+// ------------------------------------------------------
+model Product {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  brand       String           // Nhãn hiệu (Dior, Chanel...)
+  description String?
+  imageUrl    String?          // Link ảnh
+
+  categoryId  String           @db.ObjectId
+  category    Category         @relation(fields: [categoryId], references: [id])
+
+  variants    ProductVariant[] // Biến thể (10ml, 50ml, 100ml)
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+// ------------------------------------------------------
+// BẢNG 3.1: CHI TIẾT DUNG TÍCH (Biến thể)
+// ------------------------------------------------------
+model ProductVariant {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+
+  productId       String      @db.ObjectId
+  product         Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  volume          Int         // Dung tích (10, 50, 100)
+  price           Float       // Giá gốc
+  discountPercent Float       @default(0) // % Giảm giá mặc định (10, 15)
+  stock           Int         @default(0) // Tồn kho (dùng check đk < 5 chai)
+
+  orderItems      OrderItem[]
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Đảm bảo không bị tạo trùng 2 chai cùng 1 loại cùng 1 dung tích
+  @@unique([productId, volume])
+}
+
+// ------------------------------------------------------
+// BẢNG 4: ĐƠN HÀNG
+// ------------------------------------------------------
+model Order {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId      String      @db.ObjectId
+  user        User        @relation(fields: [userId], references: [id])
+
+  totalAmount Float
+  status      String      @default("PENDING") // PENDING, SHIPPED
+  address     String
+  phone       String
+
+  orderItems  OrderItem[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// ------------------------------------------------------
+// BẢNG 5: CHI TIẾT ĐƠN HÀNG
+// ------------------------------------------------------
+model OrderItem {
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+
+  orderId   String         @db.ObjectId
+  order     Order          @relation(fields: [orderId], references: [id])
+
+  variantId String         @db.ObjectId
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+
+  quantity  Int
+  price     Float          // Giá chốt CỐ ĐỊNH tại thời điểm mua (đã có Flash Sale)
+}
+
+// ------------------------------------------------------
+// BẢNG 6: PHIÊN TRÒ CHUYỆN (AI)
+// ------------------------------------------------------
+model ChatSession {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String?
+  messages  Message[]
+  createdAt DateTime  @default(now())
+}
+
+// ------------------------------------------------------
+// BẢNG 7: CHI TIẾT TIN NHẮN
+// ------------------------------------------------------
+model Message {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  chatSessionId String      @db.ObjectId
+  chatSession   ChatSession @relation(fields: [chatSessionId], references: [id])
+  role          String
+  text          String
+  createdAt     DateTime    @default(now())
+}

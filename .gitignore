@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# Bỏ qua cấu hình WebStorm
+.idea/
+
+# Bỏ qua các file test API nháp
+*.http
