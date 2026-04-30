@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/app/components/layout/Header";
 import Footer from "@/app/components/layout/Footer";
 import CartDrawer from "@/app/components/cart/CartDrawer";
+import AuthProvider from "@/app/components/auth/AuthProvider";
 
 export const metadata: Metadata = {
     title: "Aura by Mochi",
@@ -17,10 +18,12 @@ export default function RootLayout({
     return (
         <html lang="vi" suppressHydrationWarning>
         <body className="antialiased bg-[#FDFBF7]">
-        <Header />
-        <CartDrawer />
-        {children}
-        <Footer />
+        <AuthProvider>
+            <Header />
+            <CartDrawer />
+            {children}
+            <Footer />
+        </AuthProvider>
         </body>
         </html>
     );
