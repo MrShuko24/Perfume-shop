@@ -1,57 +1,82 @@
 'use client';
 
-import { ShoppingBag, Menu, LogOut, User, Search } from 'lucide-react';
+import { ShoppingBag, LogOut, User, Heart, Search } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { useCartStore } from '@/store/cartStore';
 import Link from 'next/link';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Header() {
     const { data: session } = useSession();
     const { openCart, clearCart } = useCartStore();
     const cartCount = useCartStore((state) => state.items.reduce((sum, i) => sum + i.quantity, 0));
+    const [searchValue, setSearchValue] = useState('');
+    const [scrolled, setScrolled] = useState(false);
+    const searchRef = useRef<HTMLInputElement>(null);
 
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 10);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!searchValue.trim()) return;
+        // Scroll to collection và focus search
+        document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            const input = document.querySelector<HTMLInputElement>('input[placeholder="Tìm kiếm sản phẩm..."]');
+            if (input) {
+                input.value = searchValue;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.focus();
+            }
+        }, 600);
+    };
 
     return (
-        <nav className="fixed w-full z-40 top-0 bg-[#FDFBF7]/80 backdrop-blur-md border-b border-stone-200/50">
+        <nav className={`relative w-full z-40 top-0 transition-all duration-300 ${scrolled ? 'bg-[#FDFBF7]/95 backdrop-blur-md shadow-sm' : 'bg-[#FDFBF7]/80 backdrop-blur-md'} border-b border-stone-200/50`}>
+
+            {/* ── TẦNG 1: Logo · Search · Icons ── */}
             <div className="w-full px-6 lg:px-12">
-                <div className="flex justify-between items-center h-20">
+                <div className="flex items-center justify-between h-16 gap-6">
 
                     {/* LOGO */}
-                    <div className="flex items-center gap-4">
-                        <button className="p-2 -ml-2 hover:bg-stone-100 rounded-full md:hidden">
-                            <Menu className="w-5 h-5" />
-                        </button>
-                        <Link href="/" className="font-serif text-2xl font-bold tracking-widest text-stone-900">
-                            AURA <span className="text-rose-400 font-sans text-sm tracking-normal italic">Signature</span>
-                        </Link>
-                    </div>
+                    <Link href="/" className="flex-shrink-0 font-serif text-2xl font-bold tracking-widest text-stone-900 hover:opacity-80 transition-opacity">
+                        AURA <span className="text-rose-400 font-sans text-sm tracking-normal italic font-medium">Signature</span>
+                    </Link>
 
-                    {/* NAV */}
-                    <div className="hidden md:flex items-center space-x-8 text-sm uppercase tracking-widest font-medium text-stone-500">
-                        <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-stone-900 hover:text-rose-500 transition-colors">Trang chủ</Link>
-                        <Link href="/#collection" className="hover:text-rose-500 transition-colors">Bộ sưu tập</Link>
-                        <a href="#about" className="hover:text-rose-500 transition-colors">Về chúng tôi</a>
-                    </div>
+                    {/* SEARCH BAR — giữa */}
+                    <form onSubmit={handleSearch} className="absolute left-1/2 -translate-x-1/2 w-full max-w-md">
+                        <div className="relative">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+                            <input
+                                ref={searchRef}
+                                type="text"
+                                value={searchValue}
+                                onChange={(e) => setSearchValue(e.target.value)}
+                                placeholder="Tìm kiếm nước hoa, thương hiệu bạn muốn..."
+                                className="w-full pl-10 pr-4 py-2.5 rounded-full border border-stone-200 bg-white/70 text-sm text-stone-700 placeholder:text-stone-400 focus:outline-none focus:border-rose-300 focus:bg-white transition-all"
+                            />
+                        </div>
+                    </form>
 
-                    {/* RIGHT SIDE */}
-                    <div className="flex items-center gap-3">
+                    {/* RIGHT ICONS */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
 
-                        {/* Thêm nút này trước nút ShoppingBag */}
+                        {/* WISHLIST */}
                         <button
-                            onClick={() => {
-                                document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' });
-                                setTimeout(() => document.querySelector<HTMLInputElement>('input[placeholder="Tìm kiếm sản phẩm..."]')?.focus(), 600);
-                            }}
-                            className="p-2 hover:bg-stone-100 rounded-full transition-colors"
+                            className="p-2 hover:bg-stone-100 rounded-full transition-colors text-stone-500 hover:text-rose-400"
+                            title="Wishlist"
                         >
-                            <Search className="w-5 h-5" />
+                            <Heart className="w-5 h-5" />
                         </button>
 
                         {/* GIỎ HÀNG */}
-
                         <button
                             onClick={openCart}
-                            className="p-2 hover:bg-stone-100 rounded-full relative transition-colors"
+                            className="p-2 hover:bg-stone-100 rounded-full relative transition-colors text-stone-500 hover:text-stone-900"
                         >
                             <ShoppingBag className="w-5 h-5" />
                             {cartCount > 0 && (
@@ -63,11 +88,15 @@ export default function Header() {
 
                         {/* AUTH */}
                         {session ? (
-                            <div className="flex items-center gap-2">
-                                <Link href="/profile" className="hidden md:flex items-center gap-1.5 text-sm text-stone-600 hover:text-rose-500 transition-colors">
+                            <div className="flex items-center gap-1 ml-1">
+                                <Link
+                                    href="/profile"
+                                    className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-stone-600 hover:text-rose-500 hover:bg-stone-100 transition-colors"
+                                >
                                     <User className="w-4 h-4" />
-                                    <span>{session.user?.name ?? session.user?.email}</span>
+                                    <span className="font-medium">{session.user?.name ?? session.user?.email}</span>
                                 </Link>
+
                                 {session.user?.role === 'ADMIN' && (
                                     <Link
                                         href="/admin"
@@ -76,12 +105,10 @@ export default function Header() {
                                         Dashboard
                                     </Link>
                                 )}
+
                                 <button
-                                    onClick={() => {
-                                        clearCart();
-                                        signOut({ callbackUrl: '/' });
-                                    }}
-                                    className="p-2 hover:bg-stone-100 rounded-full transition-colors text-stone-500 hover:text-red-400"
+                                    onClick={() => { clearCart(); signOut({ callbackUrl: '/' }); }}
+                                    className="p-2 hover:bg-stone-100 rounded-full transition-colors text-stone-400 hover:text-red-400"
                                     title="Đăng xuất"
                                 >
                                     <LogOut className="w-4 h-4" />
@@ -90,15 +117,50 @@ export default function Header() {
                         ) : (
                             <Link
                                 href="/login"
-                                className="text-sm font-medium text-stone-600 hover:text-rose-500 transition-colors px-3 py-1.5 rounded-lg hover:bg-stone-100"
+                                className="ml-1 text-sm font-medium text-stone-600 hover:text-rose-500 transition-colors px-3 py-1.5 rounded-lg hover:bg-stone-100"
                             >
                                 Đăng nhập
                             </Link>
                         )}
-
                     </div>
                 </div>
             </div>
+
+            {/* ── TẦNG 2: Navigation Links ── */}
+            <div className="hidden md:block">
+                <div className="w-full px-6 lg:px-12">
+                    <div className="flex items-center justify-center h-12 gap-8">
+                        {[
+                            { label: 'Hot Deals', href: '/' },
+                            { label: 'Thương hiệu', href: '/' },
+                            { label: 'Hàng mới về', href: '/shop' },
+                            { label: 'Nước hoa nam', href: '/#collection' },
+                            { label: 'Nước hoa nữ', href: '/#collection' },
+                            { label: 'Bộ sưu tập', href: '/#collection' },
+                            { label: 'Gift Sets', href: '/shop?category=gift' },
+                            { label: 'Tư vấn AI', href: '#', isAI: true },
+                        ].map((item) => (
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                onClick={item.isAI ? (e) => {
+                                    e.preventDefault();
+                                    document.querySelector<HTMLButtonElement>('[data-chat-toggle]')?.click();
+                                } : undefined}
+                                className={`text-[12px] uppercase tracking-widest font-medium transition-colors whitespace-nowrap
+                                    ${item.isAI
+                                    ? 'text-rose-400 hover:text-rose-600 flex items-center gap-1'
+                                    : 'text-stone-500 hover:text-stone-900'
+                                }`}
+                            >
+                                {item.isAI && <span className="text-[10px]">✦</span>}
+                                {item.label}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
         </nav>
     );
 }

@@ -1,15 +1,13 @@
+// src/app/components/home/Collection.tsx
 import { prisma } from '@/lib/prisma';
 import CollectionClient from './CollectionClient';
 
 export const revalidate = 0;
 export default async function Collection() {
-    const [products, categories] = await Promise.all([
-        prisma.product.findMany({
-            include: { category: true, variants: true },
-            orderBy: { createdAt: 'desc' },
-        }),
-        prisma.category.findMany({ orderBy: { name: 'asc' } }),
-    ]);
+    const products = await prisma.product.findMany({
+        include: { category: true, variants: true },
+        orderBy: { createdAt: 'desc' },
+    });
 
-    return <CollectionClient products={products} categories={categories} />;
+    return <CollectionClient products={products} />;
 }

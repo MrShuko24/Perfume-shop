@@ -3,3 +3,8 @@
 html {
     scroll-behavior: smooth;
 }
+
+.carousel-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}

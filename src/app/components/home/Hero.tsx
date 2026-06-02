@@ -25,7 +25,7 @@ export default function Hero({ onOpenChat }: HeroProps) {
     }, []);
 
     return (
-        <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <section className="relative pt-20 pb-20 lg:pt-32 lg:pb-32 overflow-hidden">
             {/* BACKGROUND CAROUSEL */}
             <div className="absolute inset-0 z-0">
                 {HERO_IMAGES.map((src, index) => (
