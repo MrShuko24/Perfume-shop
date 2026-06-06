@@ -51,6 +51,7 @@ model Product {
   imageUrl    String?          // Link ảnh
   sortOrder   Int    @default(0)
   images      String[]         // Gallery nhiều ảnh
+  collectionItems CollectionItem[]
 
   categoryId  String           @db.ObjectId
   category    Category         @relation(fields: [categoryId], references: [id])
@@ -140,4 +141,24 @@ model Message {
   role          String
   text          String
   createdAt     DateTime    @default(now())
+}
+
+model Collection {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  subtitle    String?
+  sortOrder   Int              @default(0)
+  isVisible   Boolean          @default(true)
+  items       CollectionItem[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model CollectionItem {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  collectionId String     @db.ObjectId
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  productId    String     @db.ObjectId
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sortOrder    Int        @default(0)
 }

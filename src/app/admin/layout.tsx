@@ -36,6 +36,9 @@ export default async function AdminLayout({
                             <Link href="/admin/stats" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-sm font-medium">
                                 📈 Thống kê
                             </Link>
+                            <Link href="/admin/collections" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-sm font-medium">
+                                🗂️ Kệ sản phẩm
+                            </Link>
                         </nav>
 
                         <div className="px-3 py-3 border-t border-stone-100">

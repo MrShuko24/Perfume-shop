@@ -18,18 +18,19 @@ type Product = {
     brand: string;
     imageUrl: string | null;
     images: string[];
-    category: { id: string; name: string };
     variants: Variant[];
 };
 
 type Props = {
     products: Product[];
+    title: string;
+    subtitle?: string;
 };
 
 const formatPrice = (price: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
-export default function CollectionClient({ products }: Props) {
+export default function CollectionClient({ products, title, subtitle }: Props) {
     const carouselRef = useRef<HTMLDivElement>(null);
     const isDragging = useRef(false);
     const startX = useRef(0);
@@ -121,16 +122,17 @@ export default function CollectionClient({ products }: Props) {
     const loopedProducts = [...products, ...products, ...products];
 
     return (
-        <section id="collection" className="py-20 bg-white">
+        <section id="collection" className="py-10 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div className="flex items-end justify-between mb-10">
                     <div>
-                        <h2 className="text-sm uppercase tracking-widest text-rose-500 font-semibold mb-3">
-                            Bộ sưu tập nổi bật
-                        </h2>
                         <h3 className="text-4xl font-serif text-stone-900">
-                            Những Mùi Hương <span className="italic text-stone-500">Kinh Điển</span>
+                            {subtitle ? (
+                                <>
+                                    {title} <span className="italic text-stone-500">{subtitle}</span>
+                                </>
+                            ) : title}
                         </h3>
                     </div>
                     <div className="flex items-center gap-6 flex-shrink-0">
@@ -156,7 +158,7 @@ export default function CollectionClient({ products }: Props) {
                 ) : (
                     /* FIX: Wrapper overflow-hidden ngăn card bị clip bởi section padding,
                        đồng thời dùng -mx + px để carousel scroll sát edge nhưng nội dung vẫn căn đúng */
-                    <div className="overflow-hidden">
+                    <div className="overflow-hidden py-2">
                         <div
                             ref={carouselRef}
                             onMouseDown={onMouseDown}
@@ -187,7 +189,7 @@ export default function CollectionClient({ products }: Props) {
                                         onClick={(e) => { if (hasDragged.current) e.preventDefault(); }}
                                     >
                                         <div
-                                            className="relative w-full aspect-[4/5] bg-stone-100 overflow-hidden rounded-xl mb-4"
+                                            className="relative w-full aspect-[4/5] bg-stone-100 overflow-hidden rounded-xl mb-4 shadow-md"
                                             onMouseEnter={() => setWishlist(prev => new Set([...prev, `hover-${product.id}-${index}`]))}
                                             onMouseLeave={() => setWishlist(prev => { const next = new Set(prev); next.delete(`hover-${product.id}-${index}`); return next; })}
                                         >

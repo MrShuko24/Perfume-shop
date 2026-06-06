@@ -4,6 +4,7 @@ import Header from "@/app/components/layout/Header";
 import Footer from "@/app/components/layout/Footer";
 import CartDrawer from "@/app/components/cart/CartDrawer";
 import AuthProvider from "@/app/components/auth/AuthProvider";
+import NextTopLoader from 'nextjs-toploader';
 
 export const metadata: Metadata = {
     title: "Aura Signature",
@@ -24,6 +25,7 @@ export default function RootLayout({
             {children}
             <Footer />
         </AuthProvider>
+        <NextTopLoader color="#fb7185" height={2} showSpinner={false} />
         </body>
         </html>
     );
