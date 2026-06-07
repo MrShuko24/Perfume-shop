@@ -47,3 +47,5 @@ next-env.d.ts
 
 # Bỏ qua các file test API nháp
 *.http
+
+repomix-output.xml

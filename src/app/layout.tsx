@@ -1,3 +1,4 @@
+import { Playfair_Display } from 'next/font/google';
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/app/components/layout/Header";
@@ -5,6 +6,11 @@ import Footer from "@/app/components/layout/Footer";
 import CartDrawer from "@/app/components/cart/CartDrawer";
 import AuthProvider from "@/app/components/auth/AuthProvider";
 import NextTopLoader from 'nextjs-toploader';
+
+const playfair = Playfair_Display({
+    subsets: ['latin'],
+    variable: '--font-playfair'
+});
 
 export const metadata: Metadata = {
     title: "Aura Signature",
@@ -18,7 +24,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="vi" suppressHydrationWarning>
-        <body className="antialiased bg-[#FDFBF7]">
+        <body className={`antialiased bg-[#FDFBF7] ${playfair.variable}`}>
         <AuthProvider>
             <Header />
             <CartDrawer />

@@ -1,6 +1,7 @@
 'use client';
 
 import { ShoppingBag, LogOut, User, Heart, Search } from 'lucide-react';
+import SearchBar from './SearchBar';
 import { useSession, signOut } from 'next-auth/react';
 import { useCartStore } from '@/store/cartStore';
 import Link from 'next/link';
@@ -10,9 +11,8 @@ export default function Header() {
     const { data: session } = useSession();
     const { openCart, clearCart } = useCartStore();
     const cartCount = useCartStore((state) => state.items.reduce((sum, i) => sum + i.quantity, 0));
-    const [searchValue, setSearchValue] = useState('');
     const [scrolled, setScrolled] = useState(false);
-    const searchRef = useRef<HTMLInputElement>(null);
+
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -20,20 +20,7 @@ export default function Header() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchValue.trim()) return;
-        // Scroll to collection và focus search
-        document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' });
-        setTimeout(() => {
-            const input = document.querySelector<HTMLInputElement>('input[placeholder="Tìm kiếm sản phẩm..."]');
-            if (input) {
-                input.value = searchValue;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.focus();
-            }
-        }, 600);
-    };
+
 
     return (
         <nav className={`relative w-full z-40 top-0 transition-all duration-300 ${scrolled ? 'bg-[#FDFBF7]/95 backdrop-blur-md shadow-sm' : 'bg-[#FDFBF7]/80 backdrop-blur-md'} border-b border-stone-200/50`}>
@@ -48,19 +35,9 @@ export default function Header() {
                     </Link>
 
                     {/* SEARCH BAR — giữa */}
-                    <form onSubmit={handleSearch} className="absolute left-1/2 -translate-x-1/2 w-full max-w-md">
-                        <div className="relative">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
-                            <input
-                                ref={searchRef}
-                                type="text"
-                                value={searchValue}
-                                onChange={(e) => setSearchValue(e.target.value)}
-                                placeholder="Tìm kiếm nước hoa, thương hiệu bạn muốn..."
-                                className="w-full pl-10 pr-4 py-2.5 rounded-full border border-stone-200 bg-white/70 text-sm text-stone-700 placeholder:text-stone-400 focus:outline-none focus:border-rose-300 focus:bg-white transition-all"
-                            />
-                        </div>
-                    </form>
+                    <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-md">
+                        <SearchBar />
+                    </div>
 
                     {/* RIGHT ICONS */}
                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -132,11 +109,11 @@ export default function Header() {
                     <div className="flex items-center justify-center h-12 gap-8">
                         {[
                             { label: 'Hot Deals', href: '/' },
-                            { label: 'Thương hiệu', href: '/' },
+                            { label: 'Cửa hàng', href: '/shop' },
                             { label: 'Hàng mới về', href: '/shop' },
-                            { label: 'Nước hoa nam', href: '/#collection' },
-                            { label: 'Nước hoa nữ', href: '/#collection' },
-                            { label: 'Bộ sưu tập', href: '/#collection' },
+                            { label: 'Nước hoa nam', href: '/shop?category=Nước Hoa Nam' },
+                            { label: 'Nước hoa nữ', href: '/shop?category=Nước Hoa Nữ' },
+                            { label: 'Nước hoa Unisex', href: '/shop?category=Nước Hoa Unisex' },
                             { label: 'Gift Sets', href: '/shop?category=gift' },
                             { label: 'Tư vấn AI', href: '#', isAI: true },
                         ].map((item) => (

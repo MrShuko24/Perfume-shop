@@ -8,3 +8,7 @@ html {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
 }
+
+h1, h2, h3, h4 {
+    font-family: var(--font-playfair), serif;
+}
