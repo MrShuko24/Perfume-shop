@@ -1,4 +1,3 @@
-import { Playfair_Display } from 'next/font/google';
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/app/components/layout/Header";
@@ -6,10 +5,12 @@ import Footer from "@/app/components/layout/Footer";
 import CartDrawer from "@/app/components/cart/CartDrawer";
 import AuthProvider from "@/app/components/auth/AuthProvider";
 import NextTopLoader from 'nextjs-toploader';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 
-const playfair = Playfair_Display({
-    subsets: ['latin'],
-    variable: '--font-playfair'
+const plusJakarta = Plus_Jakarta_Sans({
+    subsets: ['latin', 'vietnamese'],
+    weight: ['400', '500', '600', '700'],
+    variable: '--font-jakarta',
 });
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="vi" suppressHydrationWarning>
-        <body className={`antialiased bg-[#FDFBF7] ${playfair.variable}`}>
+        <body className={`${plusJakarta.variable} font-sans antialiased`}>
         <AuthProvider>
             <Header />
             <CartDrawer />

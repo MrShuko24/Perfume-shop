@@ -100,7 +100,7 @@ export default function ShopClient({
 
             {/* Header + Sort cùng hàng */}
             <div className="flex items-center justify-between mb-8">
-                <h1 className="text-4xl font-serif text-stone-900">Tất cả sản phẩm</h1>
+                <h1 className="text-4xl font-serif text-stone-900">Nước hoa</h1>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setMobileFilterOpen(true)}
