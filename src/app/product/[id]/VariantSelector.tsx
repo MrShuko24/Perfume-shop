@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCartStore } from '@/store/cartStore';
+import { Heart } from 'lucide-react';
 
 type Variant = {
     id: string;
@@ -22,142 +23,141 @@ type Props = {
 export default function VariantSelector({ variants, productId, productName, brand, imageUrl }: Props) {
     const addItem = useCartStore((state) => state.addItem);
     const [selectedId, setSelectedId] = useState<string>(variants[0]?.id ?? '');
+    const [quantity, setQuantity] = useState(1);
+    const [wishlist, setWishlist] = useState(false);
 
     const selected = variants.find((v) => v.id === selectedId) ?? variants[0];
-    const [quantity, setQuantity] = useState(1);
 
-    // Tính giá sau giảm
     const discountedPrice =
         selected.discountPercent > 0
             ? selected.price * (1 - selected.discountPercent / 100)
             : null;
 
-    const handleAddToCart = () => {
-        addItem({
-            variantId: selected.id,
-            productId,
-            productName,
-            brand,
-            imageUrl,
-            volume: selected.volume,
-            price: selected.price,
-            discountPercent: selected.discountPercent,
-            stock: selected.stock,
-        });
-    };
+    const displayPrice = discountedPrice ?? selected.price;
 
     return (
-        <div className="mt-8">
-            {/* CHỌN DUNG TÍCH */}
-            <h3 className="text-md font-semibold text-gray-900 mb-4">Chọn dung tích:</h3>
-            <div className="flex flex-wrap gap-4">
-                {variants.map((variant) => {
-                    const isSelected = variant.id === selectedId;
-                    const isSoldOut = variant.stock === 0;
-
-                    return (
-                        <button
-                            key={variant.id}
-                            onClick={() => { if (!isSoldOut) { setSelectedId(variant.id); setQuantity(1); } }}
-                            disabled={isSoldOut}
-                            className={`border-2 rounded-xl p-4 min-w-30 flex flex-col items-center transition-all
-                                ${isSelected
-                                ? 'border-black bg-gray-50 shadow-md'
-                                : 'border-gray-200 hover:border-gray-400'
-                            }
-                                ${isSoldOut ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
-                            `}
-                        >
-                            <span className="font-bold text-lg">{variant.volume} ml</span>
-                            <span className="text-gray-500 text-sm mt-1 line-through">
-                                {variant.discountPercent > 0
-                                    ? `${variant.price.toLocaleString('vi-VN')} ₫`
-                                    : ''}
-                            </span>
-                            {variant.discountPercent > 0 && (
-                                <span className="text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-full mt-1">
-                                    -{variant.discountPercent}%
-                                </span>
-                            )}
-                            {variant.stock > 0 && variant.stock < 5 && (
-                                <span className="text-xs text-orange-500 font-medium mt-1">
-                                    Còn {variant.stock} chai
-                                </span>
-                            )}
-                            {isSoldOut && (
-                                <span className="text-xs text-red-400 font-medium mt-1">
-                                    Hết hàng
-                                </span>
-                            )}
-                        </button>
-                    );
-                })}
-            </div>
-
-            {/* GIÁ HIỂN THỊ */}
-            <div className="mt-6 flex items-baseline gap-3">
-    <span className="text-3xl font-bold text-gray-900">
-        {((discountedPrice ?? selected.price) * quantity).toLocaleString('vi-VN')} ₫
-    </span>
+        <div className="space-y-6">
+            {/* PRICE */}
+            <div className="flex items-baseline gap-3">
+                <span className="text-3xl font-bold text-stone-900">
+                    {(displayPrice * quantity).toLocaleString('vi-VN')} ₫
+                </span>
                 {discountedPrice && (
-                    <span className="text-lg text-gray-400 line-through">
-            {(selected.price * quantity).toLocaleString('vi-VN')} ₫
-        </span>
+                    <span className="text-lg text-stone-400 line-through">
+                        {(selected.price * quantity).toLocaleString('vi-VN')} ₫
+                    </span>
+                )}
+                {selected.discountPercent > 0 && (
+                    <span className="text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-full">
+                        -{selected.discountPercent}%
+                    </span>
                 )}
             </div>
 
-            {/* SỐ LƯỢNG */}
-            <div className="mt-4 flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700">Số lượng:</span>
-                <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+            {/* VOLUME SELECT */}
+            <div>
+                <p className="text-xs uppercase tracking-widest text-stone-400 font-semibold mb-3">
+                    Chọn dung tích
+                </p>
+                <div className="flex flex-wrap gap-2">
+                    {variants.map((variant) => {
+                        const isSelected = variant.id === selectedId;
+                        const isSoldOut = variant.stock === 0;
+                        const variantDiscounted = variant.discountPercent > 0
+                            ? variant.price * (1 - variant.discountPercent / 100)
+                            : null;
+
+                        return (
+                            <button
+                                key={variant.id}
+                                onClick={() => { if (!isSoldOut) { setSelectedId(variant.id); setQuantity(1); } }}
+                                disabled={isSoldOut}
+                                className={`relative px-5 py-2.5 rounded-full border text-sm font-semibold transition-all duration-200
+                                    ${isSelected
+                                    ? 'border-stone-900 bg-stone-900 text-white shadow-md'
+                                    : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                                }
+                                    ${isSoldOut ? 'opacity-35 cursor-not-allowed line-through' : 'cursor-pointer'}
+                                `}
+                            >
+                                {variant.volume}ml
+                                {variantDiscounted && !isSelected && (
+                                    <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+                {selected.stock > 0 && selected.stock < 5 && (
+                    <p className="text-xs text-orange-500 font-medium mt-2">
+                        ⚠ Chỉ còn {selected.stock} chai
+                    </p>
+                )}
+            </div>
+
+            {/* QUANTITY + ADD TO CART */}
+            <div className="flex items-center gap-3">
+                {/* Quantity */}
+                <div className="flex items-center border border-stone-200 rounded-full overflow-hidden">
                     <button
                         type="button"
                         onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors text-lg"
+                        className="w-10 h-11 text-stone-600 hover:bg-stone-50 transition-colors flex items-center justify-center text-lg"
                     >
                         −
                     </button>
-                    <span className="px-4 py-2 font-semibold text-gray-900 min-w-[3rem] text-center">
-            {quantity}
-        </span>
+                    <span className="w-10 text-center font-semibold text-stone-900 text-sm">
+                        {quantity}
+                    </span>
                     <button
                         type="button"
                         onClick={() => setQuantity(q => Math.min(selected.stock, q + 1))}
                         disabled={quantity >= selected.stock}
-                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors text-lg disabled:opacity-30"
+                        className="w-10 h-11 text-stone-600 hover:bg-stone-50 transition-colors flex items-center justify-center text-lg disabled:opacity-30"
                     >
                         +
                     </button>
                 </div>
-                <span className="text-xs text-gray-400">Còn {selected.stock} sản phẩm</span>
-            </div>
 
-            {/* NÚT THÊM GIỎ HÀNG */}
-            <button
-                onClick={() => {
-                    for (let i = 0; i < quantity; i++) {
-                        addItem({
-                            variantId: selected.id,
-                            productId,
-                            productName,
-                            brand,
-                            imageUrl,
-                            volume: selected.volume,
-                            price: selected.price,
-                            discountPercent: selected.discountPercent,
-                            stock: selected.stock,
-                        });
-                    }
-                }}
-                disabled={selected.stock === 0}
-                className={`mt-6 w-full text-lg font-semibold py-4 px-8 rounded-xl transition-colors shadow-lg
-        ${selected.stock === 0
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-black text-white hover:bg-gray-800'
-                }`}
-            >
-                {selected.stock === 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
-            </button>
+                {/* Add to cart */}
+                <button
+                    onClick={() => {
+                        for (let i = 0; i < quantity; i++) {
+                            addItem({
+                                variantId: selected.id,
+                                productId,
+                                productName,
+                                brand,
+                                imageUrl,
+                                volume: selected.volume,
+                                price: selected.price,
+                                discountPercent: selected.discountPercent,
+                                stock: selected.stock,
+                            });
+                        }
+                    }}
+                    disabled={selected.stock === 0}
+                    className={`flex-1 h-11 rounded-full text-sm font-semibold tracking-wide transition-all duration-200
+                        ${selected.stock === 0
+                        ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                        : 'bg-stone-900 text-white hover:bg-stone-700 shadow-lg hover:shadow-xl active:scale-[0.98]'
+                    }`}
+                >
+                    {selected.stock === 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
+                </button>
+
+                {/* Wishlist */}
+                <button
+                    onClick={() => setWishlist(w => !w)}
+                    className={`w-11 h-11 rounded-full border flex items-center justify-center transition-all duration-200
+                        ${wishlist
+                        ? 'border-red-200 bg-red-50 text-red-500'
+                        : 'border-stone-200 text-stone-400 hover:border-stone-400 hover:text-stone-600'
+                    }`}
+                >
+                    <Heart className={`w-4 h-4 ${wishlist ? 'fill-current' : ''}`} />
+                </button>
+            </div>
         </div>
     );
 }

@@ -2,10 +2,16 @@
 
 @theme {
     --font-sans: var(--font-jakarta);
+    --color-background: #FDFBF7;
 }
 
 html {
     scroll-behavior: smooth;
+    background-color: #FDFBF7;
+}
+
+body {
+    background-color: #FDFBF7;
 }
 
 .carousel-smooth {

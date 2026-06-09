@@ -74,6 +74,13 @@ export default function ShopClient({
         router.push(pathname);
     }
 
+    function updatePriceFilter(min: number | null, max: number | null) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (min) params.set('minPrice', String(min)); else params.delete('minPrice');
+        if (max) params.set('maxPrice', String(max)); else params.delete('maxPrice');
+        router.push(`${pathname}?${params.toString()}`);
+    }
+
     const sorted = sortProducts(products, sort);
 
     const activeFilters = (['category', 'brand', 'volume'] as const)
@@ -146,10 +153,13 @@ export default function ShopClient({
                 </div>
             )}
 
+
+
             <div className="flex gap-8">
                 {/* Sidebar desktop */}
                 <aside className="hidden sm:block w-56 shrink-0">
                     <ShopFilters
+                        onUpdatePrice={updatePriceFilter}
                         categories={categories}
                         brands={brands}
                         volumes={volumes}
@@ -167,6 +177,7 @@ export default function ShopClient({
                                 <button onClick={() => setMobileFilterOpen(false)}><X size={18} /></button>
                             </div>
                             <ShopFilters
+                                onUpdatePrice={updatePriceFilter}
                                 categories={categories}
                                 brands={brands}
                                 volumes={volumes}

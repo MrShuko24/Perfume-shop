@@ -122,7 +122,7 @@ export default function CollectionClient({ products, title, subtitle }: Props) {
     const loopedProducts = [...products, ...products, ...products];
 
     return (
-        <section id="collection" className="py-10 bg-white">
+        <section id="collection" className="py-10 bg-transparent">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div className="flex items-end justify-between mb-10">

@@ -49,8 +49,35 @@ model Product {
   brand       String           // Nhãn hiệu (Dior, Chanel...)
   description String?
   imageUrl    String?          // Link ảnh
-  sortOrder   Int    @default(0)
-  images      String[]         // Gallery nhiều ảnh
+  sortOrder   Int              @default(0)
+
+  // Thông tin cơ bản
+  concentration String?   // EDP, EDT, EDC, Parfum
+  origin        String?   // Pháp, Ý, Mỹ...
+  gender        String?   // Nam, Nữ, Unisex
+  releaseYear   Int?      // Năm phát hành
+  scentGroup    String?   // Nhóm hương (Thảo Mộc Phương Đông...)
+  perfumer      String?   // Nhà chế tác
+
+  // Đặc tính hương
+  longevity     String?   // "6-8 tiếng"
+  sillage       String?   // "Vừa phải", "Mạnh"
+  season        String[]  // ["Xuân", "Hè"]
+  occasion      String[]  // ["Công sở", "Hẹn hò"]
+  style         String[]  // ["Cozy", "Romantic"]
+
+  // Tầng hương
+  topNotes      String[]
+  heartNotes    String[]
+  baseNotes     String[]
+
+  // Nội dung dài
+  ingredients   String?   // Chuỗi dài thành phần
+  longDesc      String?   // Mô tả dài
+
+  // Relations
+  reviews         Review[]
+  images          String[]         // Gallery nhiều ảnh
   collectionItems CollectionItem[]
 
   categoryId  String           @db.ObjectId
@@ -161,4 +188,15 @@ model CollectionItem {
   productId    String     @db.ObjectId
   product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   sortOrder    Int        @default(0)
+}
+
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId String   @db.ObjectId
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String?  @db.ObjectId
+  name      String   // Tên người đánh giá
+  rating    Int      // 1-5
+  text      String
+  createdAt DateTime @default(now())
 }

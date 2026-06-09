@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="vi" suppressHydrationWarning>
-        <body className={`${plusJakarta.variable} font-sans antialiased`}>
+        <body className={`${plusJakarta.variable} font-sans antialiased bg-[#FDFBF7]`}>
         <AuthProvider>
             <Header />
             <CartDrawer />

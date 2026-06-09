@@ -29,18 +29,18 @@ const DOT = 'w-2 h-2 rounded-full bg-stone-900';
 const MIN = 100000;
 const MAX = 30000000;
 
-export default function ShopFilters({ categories, brands, volumes, searchParams, onUpdate }: {
+export default function ShopFilters({ categories, brands, volumes, searchParams, onUpdate, onUpdatePrice }: {
     categories: { id: string; name: string }[];
     brands: string[];
     volumes: number[];
     searchParams: Record<string, string>;
     onUpdate: (key: string, value: string | null) => void;
+    onUpdatePrice: (min: number | null, max: number | null) => void;
 }) {
     const activeCat = searchParams.category ?? null;
     const activeBrand = searchParams.brand ?? null;
     const activeVolume = searchParams.volume ?? null;
 
-    // Reset về MIN/MAX khi không có searchParams
     const initMin = searchParams.minPrice ? Number(searchParams.minPrice) : MIN;
     const initMax = searchParams.maxPrice ? Number(searchParams.maxPrice) : MAX;
 
@@ -48,15 +48,16 @@ export default function ShopFilters({ categories, brands, volumes, searchParams,
     const [localMax, setLocalMax] = useState(initMax);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Sync khi searchParams thay đổi từ ngoài (xóa bộ lọc)
     useEffect(() => { setLocalMin(initMin); }, [searchParams.minPrice]);
     useEffect(() => { setLocalMax(initMax); }, [searchParams.maxPrice]);
 
     function commitPrice(min: number, max: number) {
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
-            onUpdate('minPrice', min > MIN ? String(min) : null);
-            onUpdate('maxPrice', max < MAX ? String(max) : null);
+            onUpdatePrice(
+                min > MIN ? min : null,
+                max < MAX ? max : null,
+            );
         }, 400);
     }
 
@@ -102,9 +103,7 @@ export default function ShopFilters({ categories, brands, volumes, searchParams,
             <AccordionSection title="Mức giá">
                 <div className="px-1 pt-2 pb-1">
                     <div className="relative h-6 flex items-center">
-                        {/* Track nền */}
                         <div className="absolute w-full h-1 bg-stone-200 rounded-full pointer-events-none" />
-                        {/* Track active */}
                         <div
                             className="absolute h-1 bg-stone-900 rounded-full pointer-events-none"
                             style={{
@@ -112,7 +111,6 @@ export default function ShopFilters({ categories, brands, volumes, searchParams,
                                 right: `${100 - ((localMax - MIN) / (MAX - MIN)) * 100}%`,
                             }}
                         />
-                        {/* Input MIN — nằm trên, pointer-events chỉ trên thumb */}
                         <input
                             type="range" min={MIN} max={MAX} step={50000}
                             value={localMin}
@@ -123,7 +121,6 @@ export default function ShopFilters({ categories, brands, volumes, searchParams,
                             }}
                             className={`absolute w-full h-1 appearance-none bg-transparent pointer-events-none z-20 ${thumbClass}`}
                         />
-                        {/* Input MAX */}
                         <input
                             type="range" min={MIN} max={MAX} step={50000}
                             value={localMax}

@@ -1,29 +1,18 @@
 'use client';
 
-import { ShoppingBag, LogOut, User, Heart, Search } from 'lucide-react';
+import { ShoppingBag, LogOut, User, Heart } from 'lucide-react';
 import SearchBar from './SearchBar';
 import { useSession, signOut } from 'next-auth/react';
 import { useCartStore } from '@/store/cartStore';
 import Link from 'next/link';
-import { useState, useRef, useEffect } from 'react';
 
 export default function Header() {
     const { data: session } = useSession();
     const { openCart, clearCart } = useCartStore();
     const cartCount = useCartStore((state) => state.items.reduce((sum, i) => sum + i.quantity, 0));
-    const [scrolled, setScrolled] = useState(false);
-
-
-    useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 10);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-
 
     return (
-        <nav className={`relative w-full z-40 top-0 transition-all duration-300 ${scrolled ? 'bg-[#FDFBF7]/95 backdrop-blur-md shadow-sm' : 'bg-[#FDFBF7]/80 backdrop-blur-md'} border-b border-stone-200/50`}>
+        <nav className="relative w-full z-40 top-0 transition-all duration-300 bg-[#FDFBF7] shadow-[0_4px_24px_rgba(0,0,0,0.08)] border-b border-stone-200/40">
 
             {/* ── TẦNG 1: Logo · Search · Icons ── */}
             <div className="w-full px-6 lg:px-12">
