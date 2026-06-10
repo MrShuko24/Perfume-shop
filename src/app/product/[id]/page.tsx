@@ -160,14 +160,14 @@ export default async function ProductDetailPage({
                                             {/* When to wear */}
                                             {product.whenToWear?.length > 0 && (
                                                 <div className="flex-1">
-                                                    <span className="text-sm text-stone-400 font-semibold block mb-3">Phù hợp</span>
-                                                    <div className="flex gap-3">
+                                                    <span className="text-sm text-stone-400 font-semibold block mb-2">Phù hợp</span>
+                                                    <div className="flex gap-2">
                                                         {['Xuân','Hè','Thu','Đông','Ngày','Đêm'].map(item => {
                                                             const active = product.whenToWear?.includes(item);
                                                             return (
                                                                 <div key={item} className={`flex flex-col items-center gap-1 transition-opacity ${active ? 'opacity-100' : 'opacity-20'}`}>
-                                                                    <span className="text-xl">{WHEN_TO_WEAR_ICONS[item]}</span>
-                                                                    <span className="text-[10px] text-stone-500 font-medium">{item}</span>
+                                                                    <span className="text-2xl">{WHEN_TO_WEAR_ICONS[item]}</span>
+                                                                    <span className="text-[11px] text-stone-500 font-medium">{item}</span>
                                                                 </div>
                                                             );
                                                         })}
@@ -184,16 +184,21 @@ export default async function ProductDetailPage({
                                             {product.gender && (
                                                 <div className="w-65">
                                                     <span className="text-sm text-stone-400 font-semibold block mb-3">Giới tính</span>
-                                                    <div className="flex justify-between text-[10px] text-stone-400 mb-1.5">
-                                                        <span>Nữ</span>
-                                                        <span>Unisex</span>
-                                                        <span>Nam</span>
-                                                    </div>
+                                                        <div className="grid grid-cols-3 text-[12px] text-stone-400 mb-1.5">
+                                                            <span className="text-left">Nữ</span>
+                                                            <span className="text-center">Unisex</span>
+                                                            <span className="text-right">Nam</span>
+                                                        </div>
                                                     <div className="h-1.5 bg-stone-100 rounded-full relative">
-                                                        <div
-                                                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-stone-800 rounded-full border-2 border-white shadow"
-                                                            style={{ left: `calc(${genderPos}% - 10px)` }}
-                                                        />
+                                                        <div className="relative h-1.5 bg-stone-100 rounded-full">
+                                                            <div
+                                                                className="absolute top-1/2 w-4 h-4 bg-stone-800 rounded-full border-2 border-white shadow"
+                                                                style={{
+                                                                    left: `${genderPos}%`,
+                                                                    transform: `translate(-${genderPos}%, -50%)`
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
@@ -243,7 +248,6 @@ export default async function ProductDetailPage({
                             imageUrl={product.imageUrl}
                         />
 
-                        {/* Trust badges */}
                         {/* Trust badges */}
                         <div className="mt-8 flex items-center gap-6 pt-6 border-t border-stone-100">
                             <div className="flex items-center gap-2 text-sm text-stone-500">

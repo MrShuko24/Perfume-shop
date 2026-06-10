@@ -91,7 +91,7 @@ export default function NewProductPage() {
                 topNotes: topNotes.split(',').map(s => s.trim()).filter(Boolean),
                 heartNotes: heartNotes.split(',').map(s => s.trim()).filter(Boolean),
                 baseNotes: baseNotes.split(',').map(s => s.trim()).filter(Boolean),
-                ingredients, longDesc, whenToWear,
+                ingredients, longDesc, whenToWear, accords,
             }),
         });
 

@@ -93,14 +93,14 @@ export default function ShopClient({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
 
             {/* Breadcrumb */}
-            <nav className="text-sm text-stone-400 flex items-center gap-1.5 mb-4">
+            <nav className="text-xs text-stone-400 flex items-center gap-2 mb-4 uppercase tracking-widest font-medium">
                 <Link href="/" className="hover:text-stone-600 transition-colors">Trang chủ</Link>
-                <span>/</span>
+                <span className="text-stone-300">›</span>
                 <Link href="/shop" className="hover:text-stone-600 transition-colors">Cửa hàng</Link>
                 {searchParams.get('category') && (
                     <>
-                        <span>/</span>
-                        <span className="text-stone-600 font-medium">{searchParams.get('category')}</span>
+                        <span className="text-stone-300">›</span>
+                        <span className="text-stone-700 font-bold">{searchParams.get('category')}</span>
                     </>
                 )}
             </nav>
