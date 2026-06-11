@@ -5,6 +5,7 @@ import Footer from "@/app/components/layout/Footer";
 import CartDrawer from "@/app/components/cart/CartDrawer";
 import AuthProvider from "@/app/components/auth/AuthProvider";
 import NextTopLoader from 'nextjs-toploader';
+import ChatProvider from "@/app/components/layout/ChatProvider";
 import { Plus_Jakarta_Sans } from 'next/font/google';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -31,6 +32,7 @@ export default function RootLayout({
             <CartDrawer />
             {children}
             <Footer />
+            <ChatProvider />
         </AuthProvider>
         <NextTopLoader color="#fb7185" height={2} showSpinner={false} />
         </body>

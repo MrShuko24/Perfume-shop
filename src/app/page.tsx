@@ -1,7 +1,7 @@
 import React from 'react';
 import Collection from "@/app/components/home/Collection";
 import ChatContainer from "@/app/components/chat/ChatContainer"; // File anh em mình chuẩn bị tạo ở dưới
-// import SocialBanner from "@/app/components/home/SocialBanner";
+import SocialBanner from "@/app/components/home/SocialBanner";
 
 export default function Home() {
     return (
@@ -10,7 +10,7 @@ export default function Home() {
             {/* Khối Client tương tác: Bao gồm Hero (có nút mở chat) và Widget Chatbot */}
             <ChatContainer />
 
-            {/*<SocialBanner />*/}
+            <SocialBanner />
 
             {/* ĐIỂM CHÍ MẠNG: Collection giờ đây đã có thể chạy Prisma thoải mái vì page.tsx đã là Server Component! */}
             <Collection />

@@ -2,24 +2,75 @@
 import React, { useState, useEffect, useRef, FormEvent } from 'react';
 import { Sparkles, MessageCircle, X, Send, Bot } from 'lucide-react';
 
+interface Message {
+    role: string;
+    text: string;
+}
+
 interface ChatWidgetProps {
     isChatOpen: boolean;
     setIsChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+const WELCOME_MESSAGE: Message = {
+    role: 'model',
+    text: 'Chào bạn! Bạn đang tìm nước hoa cho dịp nào vậy? 😊'
+};
+
+const SESSION_KEY = 'aura_chat_session_id';
+
 export default function ChatWidget({ isChatOpen, setIsChatOpen }: ChatWidgetProps) {
-    const [messages, setMessages] = useState([
-        { role: 'model', text: 'Chào bạn! Bạn đang tìm nước hoa cho dịp nào vậy? 😊' }
-    ]);
+    const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
     const [inputMessage, setInputMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [products, setProducts] = useState<string>('');
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [showScrollBtn, setShowScrollBtn] = useState(false);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const sessionInitialized = useRef(false);
+    const shouldScrollToBottom = useRef(false);
 
+    // Scroll xuống cuối khi chat mở ra (sau khi load history)
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (isChatOpen && !isLoadingHistory) {
+            setTimeout(() => {
+                const container = messagesContainerRef.current;
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                    setShowScrollBtn(false);
+                }
+            }, 80);
+        }
+    }, [isChatOpen, isLoadingHistory]);
+
+    // Scroll xuống khi có tin mới — chỉ nếu đang ở gần cuối
+    useEffect(() => {
+        if (isLoadingHistory || !isChatOpen) return;
+        if (shouldScrollToBottom.current) {
+            shouldScrollToBottom.current = false;
+            setTimeout(() => {
+                const container = messagesContainerRef.current;
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                    setShowScrollBtn(false);
+                }
+            }, 50);
+            return;
+        }
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+        if (isNearBottom) {
+            container.scrollTop = container.scrollHeight;
+            setShowScrollBtn(false);
+        } else {
+            setShowScrollBtn(true);
+        }
     }, [messages, isTyping]);
 
+    // Load sản phẩm
     useEffect(() => {
         fetch('/api/products')
             .then(res => res.json())
@@ -41,52 +92,83 @@ export default function ChatWidget({ isChatOpen, setIsChatOpen }: ChatWidgetProp
             .catch(() => setProducts(''));
     }, []);
 
+    // Khởi tạo session
+    useEffect(() => {
+        if (sessionInitialized.current) return;
+        sessionInitialized.current = true;
+
+        const initSession = async () => {
+            setIsLoadingHistory(true);
+            try {
+                const res = await fetch('/api/chat/session', { method: 'POST' });
+                const data = await res.json();
+                const newSessionId = data.sessionId;
+                localStorage.setItem(SESSION_KEY, newSessionId);
+                setSessionId(newSessionId);
+
+                const histRes = await fetch(`/api/chat/session?sessionId=${newSessionId}`);
+                const histData = await histRes.json();
+
+                if (histData.messages && histData.messages.length > 0) {
+                    setMessages(histData.messages);
+                } else {
+                    await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            messages: [WELCOME_MESSAGE],
+                            products: '',
+                            sessionId: newSessionId,
+                            isWelcome: true
+                        })
+                    });
+                }
+            } catch {
+                // fallback: hiển thị welcome message bình thường
+            }
+            setIsLoadingHistory(false);
+        };
+
+        initSession();
+    }, []);
+
+    const scrollToBottom = () => {
+        const container = messagesContainerRef.current;
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+            setShowScrollBtn(false);
+        }
+    };
+
+    const handleScroll = () => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+        setShowScrollBtn(!isNearBottom);
+    };
+
     const handleSendMessage = async (e?: FormEvent) => {
         e?.preventDefault();
         if (!inputMessage.trim()) return;
 
-        const userMsg = { role: 'user', text: inputMessage };
+        const userMsg: Message = { role: 'user', text: inputMessage };
         const newMessages = [...messages, userMsg];
         setMessages(newMessages);
         setInputMessage('');
         setIsTyping(true);
+        shouldScrollToBottom.current = true;
 
         try {
-            const apiKey = "AIzaSyBu3eUVCiqMQgf0jeqlbtW-aRS143kb5p4";
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
-            const payload = {
-                contents: newMessages.map(msg => ({
-                    role: msg.role === 'model' ? 'model' : 'user',
-                    parts: [{ text: msg.text }]
-                })),
-                systemInstruction: {
-                    parts: [{
-                        text: `Bạn là nhân viên tư vấn nước hoa tại AURA Signature. Trả lời ngắn gọn, tự nhiên như nhắn tin — tối đa 2 câu. Không dùng markdown, không gạch đầu dòng, không hoa mỹ. Không tự giới thiệu dài dòng.
-
-Sản phẩm hiện có:
-${products || 'Đang tải...'}
-
-Quy tắc:
-- Mỗi lần chỉ hỏi 1 câu
-- Chỉ gợi ý sản phẩm có trong danh sách trên, kèm giá
-- Xưng "mình", gọi khách là "bạn"
-- Nếu hỏi ngoài chủ đề nước hoa, nhẹ nhàng đưa về chủ đề chính`
-                    }]
-                }
-            };
-
-            const res = await fetch(url, {
+            const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ messages: newMessages, products, sessionId })
             });
-
             const data = await res.json();
-            const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Hệ thống đang bận, bạn thử lại nhé!";
-            setMessages(prev => [...prev, { role: 'model', text: replyText }]);
+            shouldScrollToBottom.current = true;
+            setMessages(prev => [...prev, { role: 'model', text: data.text }]);
         } catch {
-            setMessages(prev => [...prev, { role: 'model', text: "Lỗi kết nối, bạn thử lại sau nhé 🌿" }]);
+            setMessages(prev => [...prev, { role: 'model', text: 'Lỗi kết nối, bạn thử lại sau nhé 🌿' }]);
         } finally {
             setIsTyping(false);
         }
@@ -108,38 +190,71 @@ Quy tắc:
                                 <p className="text-xs text-rose-500 font-medium">Đang trực tuyến</p>
                             </div>
                         </div>
-                        <button onClick={() => setIsChatOpen(false)} className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors">
+                        <button
+                            onClick={() => setIsChatOpen(false)}
+                            className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
+                        >
                             <X className="w-5 h-5" />
                         </button>
                     </div>
 
                     {/* MESSAGES */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-50/50">
-                        {messages.map((msg, idx) => (
-                            <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                {msg.role === 'model' && (
-                                    <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center mt-1">
-                                        <Bot className="w-4 h-4 text-rose-600" />
+                    <div className="relative flex-1 overflow-hidden">
+                        <div
+                            ref={messagesContainerRef}
+                            onScroll={handleScroll}
+                            className="h-full overflow-y-auto p-4 space-y-4 bg-stone-50/50"
+                        >
+                            {isLoadingHistory ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="flex gap-1">
+                                        <div className="w-2 h-2 bg-rose-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                        <div className="w-2 h-2 bg-rose-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                        <div className="w-2 h-2 bg-rose-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                                     </div>
-                                )}
-                                <div className={`max-w-[75%] p-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-stone-900 text-white rounded-tr-sm' : 'bg-white border border-stone-100 text-stone-700 shadow-sm rounded-tl-sm'}`}>
-                                    {msg.text}
                                 </div>
-                            </div>
-                        ))}
-                        {isTyping && (
-                            <div className="flex gap-3 justify-start">
-                                <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center mt-1">
-                                    <Bot className="w-4 h-4 text-rose-600" />
-                                </div>
-                                <div className="bg-white border border-stone-100 p-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1">
-                                    <div className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                    <div className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                    <div className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                                </div>
-                            </div>
+                            ) : (
+                                <>
+                                    {messages.map((msg, idx) => (
+                                        <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                            {msg.role === 'model' && (
+                                                <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center mt-1">
+                                                    <Bot className="w-4 h-4 text-rose-600" />
+                                                </div>
+                                            )}
+                                            <div className={`max-w-[75%] p-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-stone-900 text-white rounded-tr-sm' : 'bg-white border border-stone-100 text-stone-700 shadow-sm rounded-tl-sm'}`}>
+                                                {msg.text}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {isTyping && (
+                                        <div className="flex gap-3 justify-start">
+                                            <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center mt-1">
+                                                <Bot className="w-4 h-4 text-rose-600" />
+                                            </div>
+                                            <div className="bg-white border border-stone-100 p-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1">
+                                                <div className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                                <div className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                                <div className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={messagesEndRef} />
+                                </>
+                            )}
+                        </div>
+
+                        {/* Nút nhảy xuống */}
+                        {showScrollBtn && !isLoadingHistory && (
+                            <button
+                                onClick={scrollToBottom}
+                                className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-stone-900 text-white w-7 h-7 rounded-full shadow-lg flex items-center justify-center hover:bg-rose-500 transition-colors z-10"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
                         )}
-                        <div ref={messagesEndRef} />
                     </div>
 
                     {/* INPUT */}
